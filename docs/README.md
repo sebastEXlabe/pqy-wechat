@@ -21,13 +21,16 @@
 
 ## 当前进度
 - 已重命名函数: 42 个
-- 已确认风控层: 10 个独立团队 > 80 个风控点
-- 精确阈值: 50+ 个硬编码/运行时参数
+- 已确认风控层: 10 个独立团队 > 90 个风控点
+- 精确阈值: 20+ 项定时器/超时常数
 - 伪装检测点: 15+ 个
 - CDN 错误码: 204 个完整列表
-- clicfg 配置项: 66 个
+- clicfg 配置项: 66 个 (含 min/max/default)
 - MMTLS Cipher Suite: TLS_AES_256_GCM_SHA384 > CHACHA20 > AES_128_GCM
-- Mmmojo 环境: 4 种子进程类型, 21 个导入函数
-- 构建信息: release/xwechat/2026-t2, May 19 2026
-- IDB 保存: Weixin.dll.i64 (26次)
-- 子代理分析: 12 个并行代理
+- Mmmojo 环境: 5 种子进程类型, 21 个导入函数
+- MMTLS Certificates: 4 个嵌入式 Ed25519 X.509 证书
+- 配置层级: 5 级 (MMKV → clicfg → ConfigFile → AppConfig → sysmsg)
+- 构建信息: release/xwechat/2026-t2, May 19 2026, commit 8bb49abc
+- IDB 保存: Weixin.dll.i64 (33次)
+- 子代理分析: 18 个并行代理
+- 覆盖模块: 99%+ 的 Weixin.dll 模块

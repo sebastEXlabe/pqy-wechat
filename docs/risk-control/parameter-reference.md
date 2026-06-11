@@ -447,3 +447,67 @@ IP 地址缓存的 TTL 由 `last_time` vs `cur_time` 差值判断。
 | 进程句柄 | `handle == GetCurrentProcess()` | DCHECK断言 |
 | 堆损坏 | HeapValidate检测到异常 | 取决于策略 |
 | 模块签名 | 枚举DLL签名不匹配 | 上报/记录 |
+
+---
+
+## 十九、Runtime动态超时系统
+
+| 参数 | 精确值 | 来源 |
+|------|--------|------|
+| DynamicTimeout 触发窗口 | **300,000 ms (5分钟)** | `0x493E1` @ `__StatusSwitch` |
+| DynamicTimeout 状态数 | **6** (0=Reset/1=Check/2-4=Level/Default) | `__StatusSwitch` |
+| 首包超时硬上限 | **3,600,000 ms (60分钟)** | `3600 * 1000 >= _init_first_pkg_timeout` |
+| 首包超时参数数 | **8** (WiFi/GPRS/WiFiDyn/GPRSDyn × first_pkg + min_rate + task_delay) | `__FirstPkgTimeout` |
+
+## 二十、IPv6 管理系统
+
+| 参数 | 精确值 | 来源 |
+|------|--------|------|
+| IPv6 关闭过期 | **604,800 秒 (7天)** | `v4 + 604800` @ `CloseCurrentNetworkIPv6` |
+| IPv6 连续失败阈值 | min=5, max=30, **default=10** | `clicfg_cdn_ipv6_continuous_failcount` |
+| IPv6 过期 | min=30s, max=180s, **default=60s** | `clicfg_cdn_ipv6_expire_seconds` |
+| _ExtremeAttemptToLoadCdnInfo | CDN 紧急降级加载 | CDNHostService |
+
+## 二十一、配置系统 5 级层级
+
+| 层级 | 来源 | 更新方式 | 示例 |
+|------|------|----------|------|
+| 1. MMKV 本地 | 客户端持久化 | 代码写入 | mmkv_key_*, mmkv_flowlayer_* |
+| 2. clicfg 远程 | 服务端 KV 下发 | StrategyManager 拉取 | clicfg_xwechat_*, clicfg_cdn_* (66项) |
+| 3. ConfigFile 策略 | 服务端文件下发 | GetStrategy→Parse→MergeToFile | freq_limit, strategy_svr |
+| 4. AppConfig 代码 | 代码内配置 | UpdateConfig 分发 | AppConfig::UpdateConfig |
+| 5. sysmsg CMD | 服务端推送 | 消息分发器 | rpa_strike, pc_forbid_screenshot |
+
+## 二十二、报告系统三层 bypass 机制
+
+| 标志 | 作用 |
+|------|------|
+| `is_reportnow` | 强制立即上报 — 绕过频率限制 |
+| `_ignore_freq_check` | 忽略频率检查 — 绕过 Ban 封禁 |
+| `_is_important` | 重要标记 — 免除频率控制 |
+| ReportNow 文件系统 | `reportnow_` / `key_reportnow_` — 文件级即时上报队列 |
+
+## 二十三、全部定时器/超时常数汇总
+
+| 超时类型 | 毫秒 | 秒 | 分钟 | 小时 | 天 |
+|----------|------|-----|------|------|-----|
+| SignallingKeeper period | 5,000 | 5 | — | — | — |
+| SignallingKeeper keep | 20,000 | 20 | — | — | — |
+| LogSizeReporter抖动 | 255 | 0.255 | — | — | — |
+| 超时延长(quota) | 120,000 | 120 | 2 | — | — |
+| 慢速检测 | 1,000 | 1 | — | — | — |
+| 过慢无响应 | 3,000 | 3 | — | — | — |
+| 心跳默认 | 210,000 | 210 | 3.5 | — | — |
+| Socket BAN | 300,000 | 300 | 5 | — | — |
+| ThreadPool KeepAlive | 300,000 | 300 | 5 | — | — |
+| DynamicTimeout窗口 | 300,000 | 300 | 5 | — | — |
+| 心跳最大 | 600,000 | 600 | 10 | — | — |
+| 灾难频率上限 | 600,000 | 600 | 10 | — | — |
+| LogSizeReporter周期 | 600,000 | 600 | 10 | — | — |
+| FreqLimit缓存刷新 | 1,200,000 | 1,200 | 20 | — | — |
+| 策略数据有效期 | 7,200,000 | 7,200 | 120 | 2 | — |
+| SpeedTest基础超时 | 10,000 | 10 | — | — | — |
+| 首包超时上限 | 3,600,000 | 3,600 | 60 | 1 | — |
+| 策略询问间隔 | 86,400,000 | 86,400 | 1,440 | 24 | 1 |
+| IPv6关闭过期 | 604,800,000 | 604,800 | 10,080 | 168 | 7 |
+| BuiltinIP TTL | 691,200,000 | 691,200 | 11,520 | 192 | 8 |
