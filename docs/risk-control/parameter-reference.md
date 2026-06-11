@@ -511,3 +511,99 @@ IP 地址缓存的 TTL 由 `last_time` vs `cur_time` 差值判断。
 | 策略询问间隔 | 86,400,000 | 86,400 | 1,440 | 24 | 1 |
 | IPv6关闭过期 | 604,800,000 | 604,800 | 10,080 | 168 | 7 |
 | BuiltinIP TTL | 691,200,000 | 691,200 | 11,520 | 192 | 8 |
+
+---
+
+## 二十四、Phase 1 离线模拟验证结果
+
+### 24.1 全局变量运行时初始值 (从 .data 段直接读取)
+
+| 变量 | 地址 | 初始值 | 含义 |
+|------|------|--------|------|
+| `dword_18A3B2B20` | SignallingKeeper period | **5000** (5秒) | ✅ 与22.1节一致 |
+| `dword_18A3B2B24` | SignallingKeeper keep_time | **20000** (20秒) | ✅ 与22.1节一致 |
+| `dword_18A79A200` | SmartHeartbeat global | **-1** (unset→INI加载) | ✅ 与12.3节一致 |
+| `dword_18A891E60` | Watchdog state | **0** (未初始化) | — |
+| `byte_18A6566C0` | 短连接标志 | **1** (已启用) | — |
+| `qword_18A8997F8` | HTTP请求虚表 | **0** (运行时设置) | — |
+
+### 24.2 StnManager 对象布局 (运行时验证)
+
+```
+StnManager 对象:
+  +0x00: vtable ptr            → 指向 30+ 虚函数表
+  +0x08: net_callback_ctx      → 存储网络回调上下文
+  +0x58: callback_bridge_ ptr  → StnCallbackBridge* (a1[11].Ptr)
+  +0x60: SRWLock               → 保护 callback_bridge_ (a1+12)
+  +0x1B10: 另一个回调指针
+  +0x1B30: mmtls_state         → 0=初始 / 1=错误 / 4=完成
+  +0x1B34: forward_secrecy     → 前向安全标志
+  +0x1B58: SetServerUrl ptr    → 服务端URL
+
+StnCallbackBridge VTable (19个虚函数):
+  [0] +0x00: 析构函数
+  [1] +0x08: SetCallback              ← 初始化时调用
+  [2] +0x10: MakesureAuthed           ← SRWLock保护，Bridge+0x10
+  [3] +0x18: TrafficData
+  [4] +0x20: OnNewDns
+  [5] +0x28: OnPush
+  [6] +0x30: Req2Buf                  ★ 请求序列化Hook点
+  [7] +0x38: Buf2Resp                 ★ 响应反序列化Hook点
+  [8] +0x40: OnTaskEnd                ★ 任务结束Hook点
+  [9] +0x48: ReportConnectStatus
+  [10] +0x50: OnLongLinkNetworkError
+  [11] +0x58: OnShortLinkNetworkError
+  [12] +0x60: OnLongLinkStatusChange
+  [13] +0x68: GetLonglinkIdentifyCheckBuffer
+  [14] +0x70: OnLonglinkIdentifyResponse
+  [15] +0x78: RequestSync
+  [16] +0x80: RequestNetCheckShortLinkHosts
+  [17] +0x88: ReportTaskProfile
+  [18] +0x90: ReportTaskLimited
+  [19] +0x98: ReportDnsProfile
+```
+
+### 24.3 从 .data 段确认的运行时 MMKV 键值
+
+| 键名 | 存储内容 | 地址 |
+|------|----------|------|
+| mmkv_key_user_name | 用户名 | 0x1881B29F9 |
+| mmkv_key_push_login_url_expired_time | 登录URL过期时间戳 | 0x1881B2A25 |
+| mmkv_key_auto_auth_key | 自动认证密钥 | 0x1881B2A5D |
+| mmkv_key_pc_account_name | PC账号名 | 0x1881B2A8A |
+| mmkv_key_old_wechat_auto_login_loaded | 旧版自动登录标志 | 0x1881B2AD3 |
+| mmkv_key_latest_login_uin | 最近登录UIN | 0x1881B2AF9 |
+| mmkv_key_latest_login_username | 最近登录用户名 | 0x1881B2B13 |
+| mmkv_key_notify_device_name | 通知设备名 | 0x1883B6513 |
+| mmkv_flowlayer_quitguide_use_times_in_day | 每日使用计数 | 0x188970B73 |
+| mmkv_flowlayer_quitguide_show_times_in_day | 每日展示计数 | 0x188970BC3 |
+
+---
+
+## 二十五、MMKV 自动过期参数
+
+| 参数 | 值/来源 | 地址 |
+|------|---------|------|
+| `enableAutoKeyExpire` | 启用/禁用 MMKV 键自动过期 | `sub_18041A600` |
+| `expiredInSeconds` | 用户配置的过期秒数 | MMKV_IO.cpp:1836 |
+| 实际过期时间 | `expiredInSeconds + sub_186866110(0)` (随机抖动) | 防时序攻击 |
+| `m_expiredInSeconds` | 存储的过期秒数 | `filtering expired keys... m_expiredInSeconds: %u` |
+| `enableCompareBeforeSet` | 与自动过期互斥 | 开启过期时强制关闭 |
+| `filtering expired keys` | 定期过滤过期键 | `filtering expired keys inside [%s] now: %u, m_expiredInSeconds: %u` |
+
+---
+
+## 二十六、关键结构体大小速查
+
+| 结构体 | 大小 | 用途 |
+|--------|------|------|
+| StnManager | ~0x1C08 字节 | 网络任务管理核心 |
+| MMTLS2 SessionInfo | 136 字节 | PSK 会话信息 |
+| PSK Object (v65) | 56 字节 | PSK 密钥对象 |
+| PSK Entry | 32 字节 | PSK 条目 |
+| WriteInfo | 48 字节 | Mmmojo 写消息 |
+| ReadInfo | 48 字节 | Mmmojo 读消息 |
+| ThreadPool 对象 | 792 字节 | 线程池状态 |
+| SpeedTest 结果 | 123+ 字节 | 测速报告 |
+| FlowAvalancheChecker | 72 字节 | 流量雪崩检测 |
+| ConnectionPool bucket_group | 48 字节 | 连接池分组 |

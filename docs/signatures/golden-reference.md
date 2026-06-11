@@ -78,3 +78,42 @@ WeChat 4.1.10.31 — Weixin.dll 关键函数地址
 | 0x184946160 | FreqLimit___FreshCacheCount | 0xc07 |
 
 ## 总重命名函数: 42 个
+
+---
+
+## StnManager 对象布局 (运行时偏移量)
+
+| 偏移 | 大小 | 字段 | 值 |
+|------|------|------|-----|
+| +0x00 | 8 | vtable ptr | 运行时地址 |
+| +0x08 | 8 | net_callback_ctx | a2参数 |
+| +0x58 | 8 | callback_bridge_ ptr | StnCallbackBridge* |
+| +0x60 | 8 | SRWLock | 保护bridge |
+| +0x1B10 | 8 | extra_callback | 另一个回调 |
+| +0x1B30 | 4 | mmtls_state | 0/1/4 |
+| +0x1B34 | 1 | forward_secrecy | bool |
+| +0x1B58 | 8 | server_url | string ptr |
+
+## StnCallbackBridge VTable (19 虚函数)
+
+| 序号 | 偏移 | 方法 | 调用保护 |
+|------|------|------|----------|
+| 1 | +0x08 | SetCallback | 无 |
+| 2 | +0x10 | MakesureAuthed | SRWLock Shared |
+| 3 | +0x18 | TrafficData | SRWLock推断 |
+| 4 | +0x20 | OnNewDns | SRWLock推断 |
+| 5 | +0x28 | OnPush | SRWLock推断 |
+| 6 | +0x30 | Req2Buf | SRWLock推断 ★Hook |
+| 7 | +0x38 | Buf2Resp | SRWLock推断 ★Hook |
+| 8 | +0x40 | OnTaskEnd | SRWLock Shared ★Hook |
+| 9-19 | +0x48~+0x98 | (Report/Request方法) | — |
+
+## Phase 1 验证的全局变量
+
+| 变量 | 地址 | 类型 | 初始值 |
+|------|------|------|--------|
+| `dword_18A3B2B20` | SignallingKeeper period | i32 | 5000 |
+| `dword_18A3B2B24` | SignallingKeeper keep | i32 | 20000 |
+| `dword_18A79A200` | SmartHeartbeat | i32 | -1 |
+| `dword_18A891E60` | Watchdog | i32 | 0 |
+| `qword_18A8997F8` | HTTP vtable | i64 | 0 |
