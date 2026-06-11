@@ -607,3 +607,51 @@ StnCallbackBridge VTable (19个虚函数):
 | SpeedTest 结果 | 123+ 字节 | 测速报告 |
 | FlowAvalancheChecker | 72 字节 | 流量雪崩检测 |
 | ConnectionPool bucket_group | 48 字节 | 连接池分组 |
+
+---
+
+## 二十七、Phase 2 实机验证结果
+
+### 27.1 进程架构验证
+
+| PID | 类型 | 线程数 | 内存 | 角色 |
+|-----|------|--------|------|------|
+| 33712 | 主进程 | 133 | 314 MB | UI + 网络主控 |
+| 36624 | 主进程 | 125 | 314 MB | 第二主进程 |
+| 7312 | 主进程 | 32 | 69 MB | 轻量主进程 |
+| 35884 | 子进程 | 14 | 24 MB | Mmmojo: wxpublic/wxutility |
+| 38812 | 子进程 | 14 | 24 MB | Mmmojo: wxpublic/wxutility |
+| 35908 | 子进程 | 8 | 18 MB | Mmmojo: wxplayer/xweb |
+| 38840 | 子进程 | 8 | 18 MB | Mmmojo: wxplayer/xweb |
+| 35940 | 子进程 | 12 | 14 MB | Mmmojo: worker |
+| 38868 | 子进程 | 12 | 14 MB | Mmmojo: worker |
+| 38380 | 子进程 | 11 | 17 MB | Mmmojo: 其他 |
+
+**✅ 验证了逆向分析中的 5 种 Mmmojo 环境类型各启动约 2 个实例**
+
+### 27.2 版本确认
+
+| 项目 | 值 | 状态 |
+|------|-----|------|
+| 安装路径 | `C:\Program Files\Tencent\Weixin\4.1.10.31\` | ✅ |
+| Weixin.dll 大小 | 183,098,416 字节 | ✅ 匹配 |
+| 进程名 | `Weixin.exe` | ✅ |
+| 注册表键 | `HKCU\Software\Tencent\Weixin` | ✅ |
+| mmmojo_64.dll | 已加载 | ✅ |
+
+### 27.3 注册表实际值
+
+| 键 | 值 |
+|----|-----|
+| Version | 4065597983 (编码格式) |
+| InstallPath | `C:\Program Files\Tencent\Weixin` |
+| OldFileSavePath | `MyDocument:` |
+
+### 27.4 实机内存分布
+
+| 进程类别 | 数量 | 总内存 | 平均线程数 |
+|----------|------|--------|-----------|
+| 主进程 | 2 | 628 MB | 129 |
+| 轻量进程 | 1 | 69 MB | 32 |
+| Mmmojo 子进程 | 8 | ~144 MB | 11 |
+| **总计** | **10** | **~900 MB** | — |
