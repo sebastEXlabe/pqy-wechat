@@ -217,6 +217,130 @@
 3. **硬编码参数** → 需要从 `.rdata` 段提取具体数值
 4. **时间参数** → 单位已在参数名中标注（ms/s/min/hour/day）
 
+---
+
+## 十二、新发现精确阈值 (Phase 5-6 验证)
+
+### 12.1 线程池参数
+| 参数 | 精确值 | 验证地址 |
+|------|--------|----------|
+| ThreadPoolMaxSize 默认 | **50** (0x32) | `sub_1847DC7F0` @ 0x1847dcab7 |
+| ThreadPoolKeepAliveTime 默认 | **300,000 ms (5分钟)** | `sub_1847DC7F0` @ 0x1847dcbb6 |
+| 初始线程数 | **20** | `sub_1847720A0` a3参数 |
+| 最小线程数 | **4** | `sub_1847720A0` a4参数 |
+| 线程池状态初始值 | **2** | `sub_1847721D0` +0xA8 |
+
+### 12.2 信号保活参数
+| 参数 | 精确值 | 地址 |
+|------|--------|------|
+| SignallingKeeper period | **5,000 ms (5秒)** | `dword_18A3B2B20` |
+| SignallingKeeper keep_time | **20,000 ms (20秒)** | `dword_18A3B2B24` |
+
+### 12.3 心跳参数
+| 参数 | 精确值 | 地址 |
+|------|--------|------|
+| 默认心跳间隔 | **210,000 ms (3.5分)** | `GetNextHeartbeatInterval` |
+| 最大心跳测试值 | **580,000 ms (9.67分)** | 同函数 |
+| 心跳溢出保护 | **600,000 ms (10分)** | `0x927C0` 常量 |
+| SmartHeartbeat 日志 | `%0 find the smart heart interval = %1` | `sub_185C0F6B0` |
+| INI边界验证 | `last_heart_ < MaxHeartInterval && last_heart_ >= MinHeartInterval` | `sub_185C0F6B0` |
+
+### 12.4 频率限制参数
+| 参数 | 精确值 | 来源 |
+|------|--------|------|
+| Anti-Avalanche 最大记录数 | **31** (0x1F) | `__InsertRecord` |
+| Anti-Avalanche 滑动窗口 | **30** (0x1E) | `__InsertRecord` |
+| 频率计数阈值 | **106** | `__CheckRecord` @ 0x185C125A0 |
+| 频率记录清除间隔 | **3,600,000 ms (1小时)** | `FrequencyLimit::Check` |
+| DisasterFrequencyLimit 硬上限 | **600,000 ms (10分)** | `sub_185C5F150` @ 0x927C0 |
+| Socket BAN 过期时间 | **300,000 ms (5分)** | `_isBaned` @ 0x1847E0070 |
+| LogId Ban 触发 | 上报次数 > maxcount | `FreqLimit___FreshCacheCount` |
+| LogId UnBan 触发 | 上报次数 < maxcount | 同函数 |
+
+### 12.5 超时参数
+| 参数 | 精确值 | 来源 |
+|------|--------|------|
+| 超时延长 (timequota) | **120,000 ms (2分)** | `cdntask %_ timequota %_ extend 120s` |
+| 过慢检测阈值 | **> 3,000 ms** 无响应 (0xBB8) | `TaskBase::OnRecvedData` |
+| 首包超时 | WiFi/GPRS 分别配置 | `UpdateFirstPkgTimeoutConfig` |
+| QC超时 | 服务端按 CGI 单独下发 | `recved cgi %_ qctimeout %_` |
+| QRW超时 | 服务端按 CGI 单独下发 | `recved cgi %_ qrwtimeout %_` |
+| DNS读/写超时 | `kTotalReadWriteTimeout` 运行时配置 | `newdns read/write timeout` |
+| TCP用户超时 | `TCP_USER_TIMEOUT` socket选项 | 连接管理 |
+
+### 12.6 慢速检测参数
+| 参数 | 精确值 | 触发条件 |
+|------|--------|----------|
+| CDN慢速阈值 | ≤ **199 bytes/ms** | `bytes_received / elapsed_ms <= 0xC7` |
+| 超时判定 | elapsed >= **1,000 ms** | `v9 < 0xF4628` 才跳过 |
+| 错误码 | **4294957260** (0xFFFFF60C) | 慢速回调 |
+| clicfg CDN慢速 | `clicfg_finder_cdn_redirect_slowspeed_threshold` | 默认1000-3000 |
+| clicfg UGC慢速 | `clicfg_finder_cdn_ugc_slowspeed_threshold` | 默认1000-3000 |
+| AVG速度监控 | `AvgSpeedMonitor::IsTooSlow` | `mars/cdn/src/net/listener/avg_speed_monitor.cc` |
+
+### 12.7 流量配额参数
+| 参数 | 说明 | 来源 |
+|------|------|------|
+| WiFi发送/接收阈值 | `wifi_data_threshold` | NetCheckTrafficMonitor |
+| Mobile发送/接收阈值 | `mobile_data_threshold` | NetCheckTrafficMonitor |
+| 流量雪崩检测 | `usedBytes > maxBytes` + 漏斗溢出 | `FlowAvalancheChecker` |
+| limitReason=1 错误码 | **4294946175** (0xFFFFC0FF) | 限速 |
+| limitReason=2 错误码 | **4294946066** (0xFFFFC0D2) | 雪崩触发 |
+
+### 12.8 代理/环境检测参数
+| 参数 | 说明 | 来源 |
+|------|------|------|
+| `clicfg_xwechat_agent_check` | 代理检测总开关 | 服务端 clicfg |
+| `clicfg_xwechat_agent_protection_level` | 防护等级 | 服务端 clicfg |
+| 多开检测参数 | `allow_multi_open` + `check_four_screen` + `require_hidden` + `require_lock` + `require_no_input` | `sub_1800F90F0` |
+| Fake IPv6 检测 | 网关字符串前2字节 == **0x3A3A** ("::") | `local_ipstack_detect` |
+| GetAdaptersAddresses 缓冲区 | **15,000 字节**，最多重试 **3次** | `GetAdaptersAddressesWrapper` |
+| IP栈返回值 | 0=None / 1=IPv4 / 2=IPv6 / 3=Dual | `__local_ipstack_detect` |
+
+### 12.9 RPA/风控打击参数
+| 参数 | 说明 | 来源 |
+|------|------|------|
+| `rpa_strike_for_pc` | RPA打击配置键 | 服务器 sysmsg CMD |
+| `acc_strike_status` | 打击状态 (0/1/2) | sysmsg 字段 |
+| `acc_strike_expire_ts` | 打击过期时间戳 | sysmsg 字段 |
+| `pc_forbid_screenshot` | 截图禁止配置 | 服务器 sysmsg CMD |
+| `screenshot_status` | 截图禁止状态 | sysmsg 字段 |
+| `screenshot_expire_ts` | 截图禁止过期时间戳 | sysmsg 字段 |
+
+---
+
+## 十三、LogSizeReporter 精确参数
+| 参数 | 值 | 地址 |
+|------|-----|------|
+| 上报周期 | **600,000 ms (10分)** | MMCore 定时器 |
+| KV ID | **16982** (0x4256) | `sub_1848C4290` |
+| 文件格式 | `_YYYYMMDD.xlog` | `__GetTodayFilePath` |
+| 最大延迟抖动 | **255 ms** | `__StartLogSizeReport` |
+
+## 十四、CDN 错误码完整体系
+共计 **204 个** CDN 错误码，分为 25 类别:
+- **风控类**: FlowLimit, ClientFlowLimit, FlowControl, UploadFlowControl, DownloadFlowControl, PostBackFlowControl, OverloadControl, FlowAvalanche, UploadTooFast1-4, ForbidIllegalContent
+- **速度类**: SpeedTooSlow, UgcSpeedTooSlow, UploadTooFast1-4, BtfsTimeout
+- **安全类**: ForbidIllegalContent, UploadHevcIllegal, InvalidAuthKey, EncryptUrlNoToken, InvalidCertificate, RouteTlsDisabled
+- **HTTP类**: Http00x~Http60plus, 14个子类
+
+## 十五、QUIC 全局封禁
+| 触发条件 | 效果 | 恢复 |
+|----------|------|------|
+| QUIC连接太慢 | `global ban quic` → 全部回退TCP | 新任务/主机评估 |
+
+## 十六、代码热补丁系统
+| 参数 | 说明 |
+|------|------|
+| 补丁算法 | Courgette (Chromium bsdiff) |
+| 补丁格式 | JMP rel32 (0xE9, 5字节) |
+| 补丁验证 | **无签名/哈希验证** |
+| 补丁来源 | `patch.xml` → `DoPatchDownload` → `CourgettePatch` |
+| 补丁应用 | VirtualProtect(PAGE_EXECUTE_READWRITE) → 写JMP → FlushInstructionCache |
+| 线程安全 | SuspendThread → 应用补丁 → ResumeThread |
+
+---
+
 ### 自动化前的必要步骤
 1. 在运行时通过Hook读取所有MMKV存储的风控参数当前值
 2. 监听 `GetClientConfig` 获取服务端下发的阈值
