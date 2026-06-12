@@ -166,20 +166,27 @@ pqy-wechat/
 ## 技术栈
 
 ### 前端
-- Electron 35 + React 19
-- HeroUI + Tailwind CSS 4
-- Zustand (状态管理)
-- Socket.IO Client
+- **Tauri 2.0** (Rust 后端，3-10 MB 包大小)
+- **React 19** (UI 框架)
+- **Tailwind CSS 4** (样式)
+- **Zustand** (状态管理)
+- **Vite** (构建工具)
+- **Socket.IO Client** (实时通信)
 
 ### 后端 (API 网关)
-- Node.js 22 + Fastify 5
-- @modelcontextprotocol/sdk (MCP)
-- Socket.IO (WebSocket)
+- **Hono** (高性能 Web 框架，跨运行时)
+- **TypeScript** (类型安全)
+- **Zod** (数据验证)
+- **@modelcontextprotocol/sdk** (MCP)
+- **Socket.IO Server** (实时通信)
 
 ### 后端 (自动化引擎)
-- Python 3.12 + FastAPI
-- PaddleOCR
-- UIAutomation
+- **Litestar** (高性能 Python 框架)
+- **Python 3.12+** (异步支持)
+- **Pydantic v2** (数据验证)
+- **Granian** (高性能 ASGI 服务器)
+- **PaddleOCR** (文字识别)
+- **UIAutomation** (Windows 自动化)
 
 ### 原生层 (C++)
 - **HyperDbg VMM** (硬件虚拟化核心)
@@ -189,6 +196,19 @@ pqy-wechat/
 - **libhyperdbg** (SDK 库)
 - **Zydis** (反汇编引擎)
 - ZeroMQ (进程间通信)
+
+### 数据库
+- **SQLite** (主数据库，嵌入式)
+- **DuckDB** (数据分析，列式存储)
+- **Drizzle ORM** (TypeScript ORM)
+
+### 测试
+- **Vitest** (单元测试)
+- **Playwright** (E2E 测试)
+
+### 部署
+- **Docker** (容器化)
+- **GitHub Actions** (CI/CD)
 
 ---
 
