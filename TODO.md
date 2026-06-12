@@ -8,26 +8,24 @@
 | 前端框架 | ✅ 完成 | Electron + React 19 + HeroUI |
 | API 网关 | ✅ 完成 | Fastify + MCP Server |
 | Python 引擎 | ✅ 完成 | 事件驱动 + UIAutomation |
-| DdiMon 方案 | ✅ 完成 | 驱动 + 客户端 + 代理 DLL |
+| HyperDbg 集成 | 🔄 进行中 | 从 DdiMon 迁移到 HyperDbg |
 | 逆向分析 | ✅ 完成 | Phase 1 & 2 完成 |
 
 ---
 
-## Phase 1: DdiMon 驱动编译与测试 [当前]
+## Phase 1: HyperDbg 集成 [当前]
 
 ### 任务清单
 
-- [ ] 1.1 安装 WDK (Windows Driver Kit)
-- [ ] 1.2 编译 DdiMon 驱动
-- [ ] 1.3 启用测试签名模式
-- [ ] 1.4 加载驱动并验证
-- [ ] 1.5 编译 DdiMon 客户端库
-- [ ] 1.6 编译 DdiMon 代理 DLL
-- [ ] 1.7 部署代理 DLL 到微信目录
-- [ ] 1.8 测试 Hook 功能
-- [ ] 1.9 验证微信正常运行
+- [x] 1.1 克隆 HyperDbg 项目
+- [ ] 1.2 编译 HyperDbg（需要 VS 2022）
+- [ ] 1.3 测试 HyperDbg VMM 加载
+- [ ] 1.4 测试 EPT Hook 功能
+- [ ] 1.5 集成 libhyperdbg SDK
+- [ ] 1.6 实现 mmojo_64.dll 函数 Hook
+- [ ] 1.7 测试 Hook 稳定性
 
-### 预计时间：2-3 天
+### 预计时间：3-4 天
 
 ---
 
@@ -106,7 +104,7 @@
 
 ---
 
-## 总计预计时间：14-20 天
+## 总计预计时间：15-21 天
 
 ---
 
@@ -114,12 +112,27 @@
 
 | 里程碑 | 目标 | 预计完成 |
 |--------|------|----------|
-| M1 | DdiMon 驱动加载成功 | Day 3 |
-| M2 | Mmmojo 消息收发 | Day 7 |
-| M3 | API 完整可用 | Day 10 |
-| M4 | 前端完整可用 | Day 14 |
-| M5 | AI Agent 集成 | Day 17 |
-| M6 | 项目完成 | Day 20 |
+| M1 | HyperDbg EPT Hook 成功 | Day 4 |
+| M2 | Mmmojo 消息收发 | Day 8 |
+| M3 | API 完整可用 | Day 11 |
+| M4 | 前端完整可用 | Day 15 |
+| M5 | AI Agent 集成 | Day 18 |
+| M6 | 项目完成 | Day 21 |
+
+---
+
+## 技术栈对比
+
+| 组件 | 旧方案 (DdiMon) | 新方案 (HyperDbg) |
+|------|-----------------|-------------------|
+| Hypervisor | HyperPlatform | HyperDbg VMM |
+| EPT Hook | 自定义实现 | 成熟实现 |
+| 反检测 | 无 | HyperEvade |
+| 脚本引擎 | 无 | 内核级脚本 |
+| SDK | 自定义 | libhyperdbg |
+| Windows 11 | ❌ 不支持 | ✅ 支持 |
+| AMD-V | ❌ 仅 Intel | ✅ 支持 |
+| 维护状态 | 停更 (2020) | 活跃 (2026) |
 
 ---
 
@@ -127,8 +140,8 @@
 
 | 风险 | 概率 | 影响 | 应对 |
 |------|------|------|------|
-| VT-x 不支持 | 低 | 高 | 检查 CPU，备选 VEH 方案 |
-| WDK 安装失败 | 低 | 中 | 使用旧版 WDK |
+| HyperDbg 编译失败 | 低 | 中 | 使用预编译版本 |
+| EPT Hook 不稳定 | 低 | 高 | 使用 HyperDbg 成熟实现 |
 | 驱动签名问题 | 中 | 中 | 启用测试签名 |
 | Mmmojo 协议变化 | 低 | 高 | 持续逆向分析 |
 | 微信更新 | 中 | 中 | 版本适配机制 |

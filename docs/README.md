@@ -2,28 +2,31 @@
 
 <div align="center">
 
-**安全 · 稳定 · 模块化 · AI-Ready**
+**安全 · 稳定 · 高性能 · 高扩展 · AI-Ready**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)]()
 [![WeChat](https://img.shields.io/badge/WeChat-4.1.10.31-brightgreen.svg)]()
+[![HyperDbg](https://img.shields.io/badge/HyperDbg-0.19.0-orange.svg)]()
 
 </div>
 
 ## 简介
 
-PQY 是一个基于深度逆向分析的微信 PC 版自动化中间层。通过 **Mmmojo 代理 + XPlugin 注入 + DdiMon 硬件虚拟化 Hook** 的技术路线，实现对微信原生功能的完整访问，同时通过 EPT 内存影子技术规避所有风控检测。
+PQY 是一个基于深度逆向分析的微信 PC 版自动化中间层。通过 **Mmmojo 代理 + XPlugin 注入 + HyperDbg 硬件虚拟化 Hook** 的技术路线，实现对微信原生功能的完整访问，同时通过 EPT 内存影子技术规避所有风控检测。
 
 ## 核心特性
 
 | 特性 | 说明 |
 |------|------|
 | 🔌 **MCP 协议** | Claude/Cursor 等 AI 直接调用 |
-| 🛡️ **DdiMon 硬件虚拟化** | EPT 影子页面，检测风险极低 |
+| 🛡️ **HyperDbg 硬件虚拟化** | EPT Hook + 反检测，生产级稳定性 |
 | 🔗 **Mmmojo 代理** | 通过 IPC 消息代理访问微信原生功能 |
 | 🧩 **XPlugin 注入** | 合法插件机制获取原生 API |
 | 📱 **功能完整** | 消息、联系人、朋友圈、支付全覆盖 |
 | 🖥️ **现代前端** | Electron + React 19 + HeroUI |
+| 🔍 **脚本引擎** | 内核级脚本，实时监控和过滤 |
+| 🕵️ **反检测** | HyperEvade 透明模式，抵抗反调试 |
 
 ## 技术路线
 
@@ -41,7 +44,10 @@ API 网关 (Node.js + Fastify)
       │
       ├─→ Mmmojo 代理 (IPC 消息拦截/重放)
       ├─→ XPlugin 注入 (原生 API 访问)
-      └─→ DdiMon 驱动 (硬件虚拟化 Hook)
+      └─→ HyperDbg VMM (硬件虚拟化 Hook)
+           ├─→ EPT Hook (隐形函数钩子)
+           ├─→ 脚本引擎 (实时过滤)
+           └─→ HyperEvade (反检测)
       │
       ▼
 微信原生 (Weixin.dll)
@@ -56,21 +62,19 @@ API 网关 (Node.js + Fastify)
 - Windows 10/11 (64-bit)
 - Node.js 22+
 - Python 3.12+
-- Visual Studio 2026 (C++ 开发)
+- Visual Studio 2022 (C++ 开发，WDK 支持)
 - WeChat PC 4.1.10.31
-- Intel VT-x + EPT 支持（用于 DdiMon）
+- Intel VT-x + EPT 支持（用于 HyperDbg）
 
 ### 安装
 
 ```bash
 # 克隆项目
-git clone https://github.com/pqy/pqy-wechat.git
+git clone --recursive https://github.com/sebastEXlabe/pqy-wechat.git
 cd pqy-wechat
 
 # 安装依赖
 setup.bat  # Windows
-# 或
-./setup.sh # Linux/Mac
 ```
 
 ### 启动
@@ -105,8 +109,8 @@ npm run dev:engine      # 自动化引擎
 
 ### 架构文档
 - [整体架构](architecture/overview.md)
-- [DdiMon 扩展方案](architecture/ddimon-extension.md)
-- [DdiMon 使用指南](architecture/ddimon-usage.md)
+- [HyperDbg 集成方案](architecture/hyperdbg-integration.md)
+- [EPT Hook 设计](architecture/ept-hook-design.md)
 - [Hook 内核层](architecture/hook-layer.md)
 - [Mmmojo 代理](architecture/mmmojo-proxy.md)
 - [XPlugin 注入](architecture/xplugin-inject.md)
@@ -147,13 +151,13 @@ pqy-wechat/
 │       ├── executor/        # 执行层
 │       └── monitor/         # 监控层
 ├── native/                  # C++ 原生代码
-│   ├── ddimon/              # DdiMon 驱动（修改版）
-│   ├── ddimon_client/       # DdiMon 客户端库
-│   ├── ddimon_proxy/        # DdiMon 代理 DLL
+│   ├── hyperdbg/            # HyperDbg SDK 集成
+│   ├── ept_hook/            # EPT Hook 实现
 │   └── src/proxy/           # Mmmojo 代理 DLL
 ├── docs/                    # 文档
 ├── scripts/                 # 辅助脚本
 ├── tools/                   # 调试工具
+│   └── HyperDbg/            # HyperDbg 源码
 └── third-party/             # 第三方库
 ```
 
@@ -178,8 +182,12 @@ pqy-wechat/
 - UIAutomation
 
 ### 原生层 (C++)
-- DdiMon (硬件虚拟化 Hook)
-- MinHook (备用 Hook)
+- **HyperDbg VMM** (硬件虚拟化核心)
+  - EPT Hook (隐形函数钩子)
+  - 脚本引擎 (内核级过滤)
+  - HyperEvade (反检测)
+- **libhyperdbg** (SDK 库)
+- **Zydis** (反汇编引擎)
 - ZeroMQ (进程间通信)
 
 ---
@@ -193,6 +201,8 @@ pqy-wechat/
 | 模块枚举 | 🟢 极低 | 无新模块 |
 | CFG 检测 | 🟢 极低 | 不修改代码 |
 | 签名验证 | 🟢 极低 | 不修改文件 |
+| 反调试检测 | 🟢 极低 | HyperEvade 透明模式 |
+| 时间检测 | 🟢 极低 | RDTSC 模拟 |
 
 ---
 
@@ -202,7 +212,7 @@ MIT License
 
 ## 致谢
 
-- [DdiMon](https://github.com/tandasat/DdiMon) — 硬件虚拟化 Hook
+- [HyperDbg](https://github.com/HyperDbg/HyperDbg) — 硬件虚拟化调试器
 - [Mars](https://github.com/nicebub/Mars) — 腾讯移动网络框架
 - [HeroUI](https://heroui.com/) — React UI 组件库
 - [Model Context Protocol](https://modelcontextprotocol.io/) — AI 工具协议

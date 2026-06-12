@@ -1,0 +1,3 @@
+[submodule "tools/HyperDbg"]
+	path = tools/HyperDbg
+	url = https://github.com/HyperDbg/HyperDbg.git
