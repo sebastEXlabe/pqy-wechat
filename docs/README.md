@@ -210,8 +210,9 @@ pqy-wechat/
 - **ZeroMQ** (与 Rust 引擎通信)
 
 ### 数据库
-- **SQLite** (主数据库，C 原生，聊天记录/联系人)
-- **rusqlite** (Rust SQLite 绑定)
+- **微信数据库** (直接使用微信 SQLite 数据库，无需额外数据库)
+- **Mmmojo IPC** (调用微信原生函数获取数据)
+- **rusqlite** (Rust SQLite 绑定，用于读取微信数据库)
 
 ### 通信层
 - **原生 WebSocket** (Rust tungstenite)
