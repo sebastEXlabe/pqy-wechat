@@ -501,8 +501,6 @@ text = await mmojo.ocr(image_path='screenshot.png')
 
 **技术栈：**
 - **Mmmojo IPC** (调用微信原生函数获取数据)
-- **rusqlite** (Rust SQLite 绑定，用于读取微信数据库)
-- **SQLCipher** (解密微信数据库，如果需要)
 
 ---
 
@@ -808,18 +806,21 @@ C++ 原生层 (HyperDbg)
 
 ### 数据库
 
-**直接使用微信数据库：**
+**通过 Mmmojo IPC 获取数据：**
 
 **技术栈：**
 - **Mmmojo IPC** (调用微信原生函数获取数据)
-- **rusqlite** (Rust SQLite 绑定，用于读取微信数据库)
-- **SQLCipher** (解密微信数据库，如果需要)
 
 **为什么不创建独立数据库？**
 - 微信已经有完整数据库
 - 数据与微信一致，无需同步
 - 减少依赖，提高隐蔽性
 - 实时性更高
+
+**为什么不直接读取微信数据库？**
+- 需要解密（SQLCipher），复杂度高
+- 需要获取加密密钥，可能被检测
+- Mmmojo IPC 更隐蔽，更稳定
 
 ### 通信层
 
