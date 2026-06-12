@@ -1,0 +1,31 @@
+# 核心依赖
+fastapi>=0.111.0
+uvicorn>=0.30.0
+pyzmq>=26.0.0
+pydantic>=2.7.0
+
+# OCR
+paddleocr>=2.8.0
+paddlepaddle>=3.0.0
+
+# 图像处理
+opencv-python>=4.10.0
+numpy>=1.26.0
+
+# UIAutomation
+uiautomation>=2.0.18
+comtypes>=1.4.0
+pyautogui>=0.9.54
+
+# 系统监控
+psutil>=6.0.0
+
+# 日志
+loguru>=0.7.0
+
+# 配置
+pyyaml>=6.0.1
+python-dotenv>=1.0.0
+
+# 类型检查
+typing-extensions>=4.12.0

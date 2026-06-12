@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.20)
+project(PQY-Simple LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+
+# 简单的 DLL
+add_library(pqy_simple SHARED src/hook/dllmain_simple.cpp)
+set_target_properties(pqy_simple PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
+)

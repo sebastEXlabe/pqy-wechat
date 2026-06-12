@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\woshi\Downloads\PQY\native\build_proxy\CMakeFiles\9ba8319939fc23c08ad287d885d88f59\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{DFF2432A-27D5-3D44-9ACD-81E6BEB70B92}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

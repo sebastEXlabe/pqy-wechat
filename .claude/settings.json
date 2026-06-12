@@ -1,0 +1,40 @@
+{
+  "code_review": {
+    "enabled": true,
+    "auto_review_on_commit": true,
+    "auto_fix_enabled": true,
+    "rules_file": ".claude/skills/code-reviewer/SKILL.md",
+    "risk_docs": [
+      "docs/risk-control/bypass-strategy.md",
+      "docs/risk-control/risk-assessment.md"
+    ],
+    "blocked_patterns": [
+      "Hook.*CloseHandle",
+      "Hook.*DuplicateHandle",
+      "CreateRemoteThread",
+      "SuspendThread",
+      "SetSystemTime",
+      "WriteFile.*Weixin\\.dll"
+    ],
+    "warning_patterns": [
+      "Hook_IntegrityCheckTable_Verify.*\\{[^\\}]*return",
+      "Hook_IsDebuggerPresent.*\\{[^\\}]*return"
+    ]
+  },
+  "subagents": {
+    "code-reviewer": {
+      "enabled": true,
+      "config": ".claude/agents/code-reviewer.md",
+      "triggers": [
+        "code-review",
+        "审查代码",
+        "安全审查"
+      ],
+      "auto_review_patterns": [
+        "native/src/**/*.cpp",
+        "native/src/**/*.h",
+        "native/include/**/*.h"
+      ]
+    }
+  }
+}

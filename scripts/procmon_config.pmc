@@ -1,0 +1,5 @@
+Process Name is WeChat.exe then Include
+Process Name is Weixin.exe then Include
+Path contains mmmojo then Include
+Operation is CreateFile then Include
+Operation is LoadImage then Include
