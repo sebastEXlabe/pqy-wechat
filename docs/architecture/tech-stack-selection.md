@@ -187,48 +187,167 @@
 
 **使用场景：**
 - 微信自动化操作（消息发送、朋友圈发布等）
-- OCR 文字识别（PaddleOCR）
-- UI 自动化（UIAutomation）
-- 与 C++ 原生层通信（HyperDbg）
+- 与 C++ 原生层通信（HyperDbg/Mmmojo）
 - 事件驱动架构
 
 **关键需求：**
 - 异步支持（并发处理多个操作）
 - 与 C++ 通信（ZeroMQ/IPC）
-- OCR 集成（PaddleOCR）
-- UI 自动化（Windows API）
 - 长时间运行稳定性
+- 低检测风险
 
-### 选项对比
+### 自动化方案对比
 
-| 框架 | 性能 | 异步 | C++ 集成 | OCR 支持 | 生态 | 稳定性 |
-|------|------|------|----------|----------|------|--------|
-| **FastAPI** | 高 | ✅ | ✅ ZeroMQ | ✅ 好 | ✅ 成熟 | ✅ 稳定 |
-| **Litestar** | 极高 | ✅ | ✅ ZeroMQ | ✅ 好 | ⚠️ 较新 | ⚠️ 待验证 |
-| **纯 Python** | 中 | ✅ | ✅ 原生 | ✅ 好 | ✅ 丰富 | ✅ 稳定 |
+#### 旧方案：UI 自动化 + PaddleOCR
 
-### 推荐：FastAPI
+```
+用户请求 → Python 引擎 → UI 自动化 → 模拟点击/输入 → OCR 识别结果
+```
+
+**问题：**
+- ❌ UI 自动化容易被检测（pyautogui/pywinauto 进程）
+- ❌ OCR 识别有延迟，不稳定
+- ❌ 依赖 UI 状态，容易失败
+- ❌ 额外依赖（PaddleOCR），增加包大小
+
+#### 新方案：内核级 Hook + Mmmojo IPC
+
+```
+用户请求 → Python 引擎 → Mmmojo IPC → 微信原生函数 → 直接返回结果
+```
+
+**优势：**
+- ✅ 无 UI 操作，不可检测
+- ✅ 直接调用原生 API，稳定高效
+- ✅ 不依赖 UI 状态
+- ✅ 无额外依赖
+
+### 核心架构
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    用户请求                                    │
+│                          │                                    │
+│                          ▼                                    │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │              Python 引擎 (FastAPI)                    │    │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │    │
+│  │  │ 消息管理    │  │ 联系人管理  │  │ 朋友圈管理  │ │    │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘ │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                          │                                    │
+│                          ▼                                    │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │              Mmmojo IPC 层                            │    │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │    │
+│  │  │ SendMsg     │  │ GetContacts │  │ PostMoments │ │    │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘ │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                          │                                    │
+│                          ▼                                    │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │              HyperDbg EPT Hook                       │    │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │    │
+│  │  │ 拦截函数    │  │ 参数修改    │  │ 返回值控制  │ │    │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘ │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                          │                                    │
+│                          ▼                                    │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │              微信原生 (Weixin.dll)                    │    │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │    │
+│  │  │ mmojo_64.dll│  │ Weixin.dll  │  │ 其他模块    │ │    │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘ │    │
+│  └─────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 功能实现方式
+
+#### 1. 发送消息
+
+**旧方案（UI 自动化）：**
+```python
+# 找到聊天窗口 → 模拟输入 → 点击发送
+pyautogui.click(100, 200)  # 点击输入框
+pyautogui.typewrite('Hello')  # 输入文字
+pyautogui.click(300, 400)  # 点击发送
+```
+
+**新方案（Mmmojo IPC）：**
+```python
+# 直接调用微信原生函数
+await mmojo.send_message(contact_id='wxid_xxx', content='Hello')
+```
+
+#### 2. 获取联系人
+
+**旧方案（UI 自动化）：**
+```python
+# 打开联系人列表 → OCR 识别 → 解析结果
+screenshot = pyautogui.screenshot()
+contacts = paddleocr.ocr(screenshot)  # OCR 识别
+```
+
+**新方案（Mmmojo IPC）：**
+```python
+# 直接调用微信原生函数
+contacts = await mmojo.get_contacts()
+```
+
+#### 3. 发布朋友圈
+
+**旧方案（UI 自动化）：**
+```python
+# 打开朋友圈 → 模拟点击 → 输入内容 → 发布
+pyautogui.click(100, 200)  # 点击朋友圈入口
+pyautogui.typewrite('今天天气真好')  # 输入内容
+pyautogui.click(300, 400)  # 点击发布
+```
+
+**新方案（Mmmojo IPC）：**
+```python
+# 直接调用微信原生函数
+await mmojo.post_moments(content='今天天气真好', images=['photo.jpg'])
+```
+
+#### 4. OCR 识别
+
+**旧方案（PaddleOCR）：**
+```python
+# 截图 → PaddleOCR 识别 → 解析结果
+screenshot = pyautogui.screenshot()
+text = paddleocr.ocr(screenshot)
+```
+
+**新方案（微信 OCR）：**
+```python
+# 调用微信内置 OCR
+text = await mmojo.ocr(image_path='screenshot.png')
+```
+
+### 推荐：FastAPI + Mmmojo IPC
 
 **理由：**
 
-1. **OCR 集成成熟**
-   - PaddleOCR 官方示例多使用 FastAPI
-   - 异步支持好，适合图片处理
-   - 社区有大量 OCR 相关项目
+1. **内核级操作，不可检测**
+   - 不使用 UI 自动化，避免被检测
+   - 直接调用原生 API，绕过 UI 层
+   - 通过 HyperDbg EPT Hook，隐形操作
 
-2. **与 C++ 通信成熟**
+2. **稳定高效**
+   - 不依赖 UI 状态，不会因为窗口变化失败
+   - 直接调用原生函数，延迟低
+   - 无 OCR 识别误差
+
+3. **与 C++ 通信成熟**
    - ZeroMQ Python 绑定成熟
    - FastAPI 可以轻松集成 ZeroMQ
    - 异步支持，不会阻塞主线程
 
-3. **UI 自动化支持**
-   - pyautogui/pywinauto 与 FastAPI 集成好
-   - 异步支持，可以并发执行多个操作
-   - 事件驱动架构适合 UI 自动化
-
 4. **长时间运行稳定**
    - FastAPI 基于 Starlette，稳定性有保障
-   - uvicorn/granian 服务器成熟
+   - uvicorn 服务器成熟
    - 社区有大量生产环境案例
 
 5. **开发效率**
@@ -240,22 +359,17 @@
 - FastAPI (Web 框架)
 - Python 3.12+ (语言)
 - Pydantic v2 (数据验证)
-- uvicorn/granian (ASGI 服务器)
-- PaddleOCR (文字识别)
-- pyautogui/pywinauto (UI 自动化)
+- uvicorn (ASGI 服务器)
 - ZeroMQ (与 C++ 通信)
+- Mmmojo IPC (微信原生 API)
 
 ### 为什么不选 Litestar？
 
-1. **OCR 集成案例少**
-   - PaddleOCR 官方示例多使用 FastAPI
-   - 可能需要额外适配工作
-
-2. **生态相对较新**
+1. **生态相对较新**
    - 社区支持相对较少
    - 问题解决方案少
 
-3. **团队熟悉度**
+2. **团队熟悉度**
    - FastAPI 更多人熟悉
    - 学习成本低
 
@@ -601,15 +715,17 @@ C++ 原生层 (HyperDbg)
 - **Python 3.12+** (语言)
 - **Pydantic v2** (数据验证)
 - **uvicorn** (ASGI 服务器)
-- **PaddleOCR** (文字识别)
-- **pyautogui/pywinauto** (UI 自动化)
 - **ZeroMQ** (与 C++ 通信)
+- **Mmmojo IPC** (微信原生 API)
+
+**注意：** 不使用 PaddleOCR 和 pyautogui/pywinauto，直接通过 Mmmojo IPC 调用微信原生功能。
 
 ### 原生层（C++）
 - **HyperDbg VMM** (硬件虚拟化)
 - **libhyperdbg** (SDK)
 - **Zydis** (反汇编引擎)
 - **ZeroMQ** (与 Python 通信)
+- **Mmmojo IPC** (微信原生 API)
 
 ### AI Agent
 - **@modelcontextprotocol/sdk** (MCP SDK)
@@ -640,12 +756,19 @@ C++ 原生层 (HyperDbg)
 |------|------|----------|
 | 前端 | Electron | Windows 兼容性最好，微信用户群体 |
 | API 网关 | Fastify | MCP 兼容好，生态成熟 |
-| 引擎 | FastAPI | OCR 集成成熟，异步支持好 |
+| 引擎 | FastAPI + Mmmojo IPC | 内核级操作，不可检测 |
 | 原生层 | HyperDbg | EPT Hook 成熟，反检测能力强 |
 | 通信 | Socket.IO + ZeroMQ | 实时性好，跨语言支持 |
 | 数据库 | SQLite + LowDB | 嵌入式，零配置 |
 | 测试 | Vitest + Playwright | Electron 测试支持好 |
 | 部署 | electron-builder | Windows 安装包支持好 |
+
+## 自动化方案对比
+
+| 方案 | 检测风险 | 稳定性 | 性能 | 依赖 |
+|------|----------|--------|------|------|
+| **UI 自动化 + PaddleOCR** | 🔴 高 | 🔴 低 | 🔴 低 | 🔴 多 |
+| **Mmmojo IPC + HyperDbg** | 🟢 极低 | 🟢 高 | 🟢 高 | 🟢 少 |
 
 ---
 

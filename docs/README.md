@@ -181,13 +181,14 @@ pqy-wechat/
 - **ZeroMQ** (与 Python 通信)
 
 ### 后端引擎（Python）
-- **FastAPI** (Web 框架，OCR 集成成熟)
+- **FastAPI** (Web 框架)
 - **Python 3.12+** (异步支持)
 - **Pydantic v2** (数据验证)
 - **uvicorn** (ASGI 服务器)
-- **PaddleOCR** (文字识别)
-- **pyautogui/pywinauto** (UI 自动化)
 - **ZeroMQ** (与 C++ 通信)
+- **Mmmojo IPC** (微信原生 API，直接调用原生函数)
+
+**注意：** 不使用 PaddleOCR 和 pyautogui/pywinauto，直接通过 Mmmojo IPC 调用微信原生功能，更隐蔽、更稳定。
 
 ### 原生层（C++）
 - **HyperDbg VMM** (硬件虚拟化核心)
@@ -197,6 +198,7 @@ pqy-wechat/
 - **libhyperdbg** (SDK 库)
 - **Zydis** (反汇编引擎)
 - **ZeroMQ** (与 Python 通信)
+- **Mmmojo IPC** (微信原生 API)
 
 ### AI Agent
 - **@modelcontextprotocol/sdk** (MCP SDK)
