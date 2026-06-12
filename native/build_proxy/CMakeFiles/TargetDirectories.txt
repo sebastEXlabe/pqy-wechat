@@ -1,3 +1,0 @@
-C:/Users/woshi/Downloads/PQY/native/build_proxy/CMakeFiles/mmojo_proxy.dir
-C:/Users/woshi/Downloads/PQY/native/build_proxy/CMakeFiles/ALL_BUILD.dir
-C:/Users/woshi/Downloads/PQY/native/build_proxy/CMakeFiles/ZERO_CHECK.dir
