@@ -693,75 +693,211 @@ C++ 原生层 (HyperDbg)
 
 ---
 
-## 最终技术栈
+## 最终技术栈（优化版）
 
-### 前端（Electron 应用）
-- **Electron 35** (桌面框架)
+### 前端（Tauri 2.0 应用）
+
+**选择 Tauri 2.0 替代 Electron：**
+
+| 对比项 | Electron | Tauri 2.0 |
+|--------|----------|-----------|
+| 包大小 | 50-150 MB | 3-10 MB |
+| 内存占用 | 150-300 MB | 50-100 MB |
+| 后端语言 | Node.js | Rust |
+| 原生性 | 低 | 高 |
+| 安全性 | 中 | 高 |
+| WebView | Chromium 内置 | 系统 WebView2 |
+
+**技术栈：**
+- **Tauri 2.0** (Rust 后端，原生性高)
 - **React 19** (UI 框架)
 - **Tailwind CSS 4** (样式)
 - **Zustand** (状态管理)
-- **electron-vite** (构建工具)
-- **Socket.IO Client** (实时通信)
+- **Vite** (构建工具)
 
-### 后端 API 网关（Node.js）
-- **Fastify 5** (Web 框架)
-- **TypeScript** (语言)
-- **@fastify/websocket** (WebSocket)
-- **@modelcontextprotocol/sdk** (MCP)
+**为什么不选 WPF/WinUI？**
+- 开发效率低
+- 跨平台能力差
+- 社区生态少
+
+### 后端 API 网关（Rust 原生）
+
+**选择 Rust 替代 Node.js：**
+
+| 对比项 | Node.js (Fastify) | Rust (Axum) |
+|--------|-------------------|-------------|
+| 性能 | 高 | 极高 |
+| 内存占用 | 中 | 低 |
+| 原生性 | 低 | 高 |
+| 依赖 | 多 | 少 |
+| 安全性 | 中 | 高 |
+
+**技术栈：**
+- **Axum** (Rust Web 框架，原生性高)
+- **Tokio** (异步运行时)
+- **Serde** (序列化)
+- **Tower** (中间件)
 - **ZeroMQ** (与 Python 通信)
 
-### 后端引擎（Python）
-- **FastAPI** (Web 框架)
-- **Python 3.12+** (语言)
-- **Pydantic v2** (数据验证)
-- **uvicorn** (ASGI 服务器)
+**为什么不选 Fastify？**
+- Node.js 非原生
+- 内存占用相对较高
+- 依赖较多
+
+### 后端引擎（Rust 原生）
+
+**选择 Rust 替代 Python：**
+
+| 对比项 | Python (FastAPI) | Rust (Axum) |
+|--------|------------------|-------------|
+| 性能 | 高 | 极高 |
+| 内存占用 | 中 | 低 |
+| 原生性 | 低 | 高 |
+| 依赖 | 多 | 少 |
+| 类型安全 | 中 | 高 |
+
+**技术栈：**
+- **Axum** (Rust Web 框架)
+- **Tokio** (异步运行时)
+- **Serde** (序列化)
 - **ZeroMQ** (与 C++ 通信)
 - **Mmmojo IPC** (微信原生 API)
 
-**注意：** 不使用 PaddleOCR 和 pyautogui/pywinauto，直接通过 Mmmojo IPC 调用微信原生功能。
+**为什么不选 FastAPI？**
+- Python 非原生
+- 性能相对较低
+- 依赖较多
 
-### 原生层（C++）
+### 原生层（C++ 原生）
+
+**保持 C++ 原生：**
+
+**技术栈：**
 - **HyperDbg VMM** (硬件虚拟化)
 - **libhyperdbg** (SDK)
 - **Zydis** (反汇编引擎)
-- **ZeroMQ** (与 Python 通信)
+- **ZeroMQ** (与 Rust 通信)
 - **Mmmojo IPC** (微信原生 API)
 
 ### AI Agent
-- **@modelcontextprotocol/sdk** (MCP SDK)
-- **mcp** (Python MCP SDK)
-- **自定义 Agent 框架**
+
+**选择原生 MCP 实现：**
+
+**技术栈：**
+- **自定义 MCP 实现** (Rust 原生)
+- **ZeroMQ** (与 Rust 引擎通信)
+
+**为什么不选 MCP SDK？**
+- 减少依赖
+- 原生性更高
+- 性能更好
 
 ### 数据库
-- **SQLite** (主数据库，聊天记录/联系人)
-- **LowDB** (配置存储)
-- **better-sqlite3** (Node.js SQLite 绑定)
+
+**保持 SQLite 原生：**
+
+**技术栈：**
+- **SQLite** (主数据库，C 原生)
+- **rusqlite** (Rust SQLite 绑定)
+
+**为什么不选 LowDB？**
+- LowDB 是 JavaScript 库
+- 使用 Rust 原生 JSON 解析
+
+### 通信层
+
+**选择原生 WebSocket：**
+
+| 对比项 | Socket.IO | 原生 WebSocket |
+|--------|-----------|----------------|
+| 依赖 | 多 | 少 |
+| 原生性 | 低 | 高 |
+| 性能 | 高 | 极高 |
+| 复杂度 | 低 | 中 |
+
+**技术栈：**
+- **原生 WebSocket** (Rust tungstenite)
+- **ZeroMQ** (跨语言通信)
 
 ### 测试
-- **Vitest** (单元测试)
-- **Playwright** (E2E 测试)
-- **electron-playwright** (Electron 测试)
-- **MSW** (API Mock)
+
+**选择 Rust 原生测试：**
+
+**技术栈：**
+- **Rust 测试框架** (cargo test)
+- **Tokio 测试** (异步测试)
 
 ### 部署
-- **electron-builder** (打包)
-- **electron-updater** (自动更新)
+
+**选择 Tauri 原生打包：**
+
+**技术栈：**
+- **Tauri 打包** (原生安装包)
 - **GitHub Actions** (CI/CD)
 
 ---
 
-## 技术栈总结
+## 技术栈总结（优化版）
 
-| 层级 | 技术 | 选择理由 |
-|------|------|----------|
-| 前端 | Electron | Windows 兼容性最好，微信用户群体 |
-| API 网关 | Fastify | MCP 兼容好，生态成熟 |
-| 引擎 | FastAPI + Mmmojo IPC | 内核级操作，不可检测 |
-| 原生层 | HyperDbg | EPT Hook 成熟，反检测能力强 |
-| 通信 | Socket.IO + ZeroMQ | 实时性好，跨语言支持 |
-| 数据库 | SQLite + LowDB | 嵌入式，零配置 |
-| 测试 | Vitest + Playwright | Electron 测试支持好 |
-| 部署 | electron-builder | Windows 安装包支持好 |
+| 层级 | 技术 | 原生性 | 隐蔽性 | 稳定性 | 依赖 | 先进性 |
+|------|------|--------|--------|--------|------|--------|
+| 前端 | Tauri 2.0 (Rust) | 🟢 高 | 🟢 高 | 🟢 高 | 🟢 低 | 🟢 高 |
+| API 网关 | Axum (Rust) | 🟢 高 | 🟢 高 | 🟢 高 | 🟢 低 | 🟢 高 |
+| 引擎 | Axum (Rust) | 🟢 高 | 🟢 高 | 🟢 高 | 🟢 低 | 🟢 高 |
+| 原生层 | HyperDbg (C++) | 🟢 高 | 🟢 高 | 🟢 高 | 🟢 低 | 🟢 高 |
+| 通信 | WebSocket + ZeroMQ | 🟢 高 | 🟢 高 | 🟢 高 | 🟢 低 | 🟢 高 |
+| 数据库 | SQLite (C) | 🟢 高 | 🟢 高 | 🟢 高 | 🟢 低 | 🟢 高 |
+
+## 优化前后对比
+
+| 层级 | 旧方案 | 新方案 | 优化点 |
+|------|--------|--------|--------|
+| 前端 | Electron (Node.js) | Tauri 2.0 (Rust) | 原生性↑，包大小↓，内存↓ |
+| API 网关 | Fastify (Node.js) | Axum (Rust) | 原生性↑，性能↑，依赖↓ |
+| 引擎 | FastAPI (Python) | Axum (Rust) | 原生性↑，性能↑，依赖↓ |
+| 原生层 | HyperDbg (C++) | HyperDbg (C++) | 保持 |
+| 通信 | Socket.IO + ZeroMQ | WebSocket + ZeroMQ | 依赖↓，原生性↑ |
+| 数据库 | SQLite + LowDB | SQLite | 依赖↓，原生性↑ |
+
+## Rust 技术栈优势
+
+### 为什么选择 Rust？
+
+1. **原生性高**
+   - 编译为原生机器码
+   - 无运行时开销
+   - 直接调用系统 API
+
+2. **隐蔽性高**
+   - 无解释器，不可反编译
+   - 内存安全，无漏洞
+   - 无垃圾回收，行为可预测
+
+3. **稳定性高**
+   - 编译时检查，无运行时错误
+   - 内存安全，无崩溃
+   - 并发安全，无竞态条件
+
+4. **依赖低**
+   - 标准库完善
+   - 无虚拟机依赖
+   - 无额外运行时
+
+5. **技术先进**
+   - 现代语言特性
+   - 活跃社区
+   - 快速发展
+
+### Rust vs Node.js vs Python
+
+| 对比项 | Rust | Node.js | Python |
+|--------|------|---------|--------|
+| 性能 | 极高 | 高 | 中 |
+| 内存占用 | 低 | 中 | 高 |
+| 原生性 | 高 | 低 | 低 |
+| 类型安全 | 高 | 中 | 低 |
+| 依赖 | 低 | 多 | 多 |
+| 学习曲线 | 高 | 低 | 低 |
 
 ## 自动化方案对比
 

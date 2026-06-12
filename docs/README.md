@@ -163,62 +163,66 @@ pqy-wechat/
 
 ---
 
-## 技术栈
+## 技术栈（Rust 原生方案）
 
-### 前端（Electron 应用）
-- **Electron 35** (桌面框架，Windows 兼容性最好)
+### 设计原则
+- **高原生性**：编译为原生机器码，无运行时开销
+- **高隐蔽性**：无解释器，不可反编译
+- **高稳定性**：编译时检查，内存安全
+- **低依赖**：标准库完善，无虚拟机依赖
+- **技术先进**：Rust 现代语言特性
+
+### 前端（Tauri 2.0 应用）
+- **Tauri 2.0** (Rust 后端，原生性高，包大小 3-10 MB)
 - **React 19** (UI 框架)
 - **Tailwind CSS 4** (样式)
 - **Zustand** (状态管理)
-- **electron-vite** (构建工具)
-- **Socket.IO Client** (实时通信)
+- **Vite** (构建工具)
 
-### 后端 API 网关（Node.js）
-- **Fastify 5** (Web 框架，MCP 兼容好)
-- **TypeScript** (类型安全)
-- **@fastify/websocket** (WebSocket)
-- **@modelcontextprotocol/sdk** (MCP)
-- **ZeroMQ** (与 Python 通信)
+### 后端 API 网关（Rust 原生）
+- **Axum** (Rust Web 框架，原生性高)
+- **Tokio** (异步运行时)
+- **Serde** (序列化)
+- **Tower** (中间件)
+- **ZeroMQ** (与 C++ 通信)
 
-### 后端引擎（Python）
-- **FastAPI** (Web 框架)
-- **Python 3.12+** (异步支持)
-- **Pydantic v2** (数据验证)
-- **uvicorn** (ASGI 服务器)
+### 后端引擎（Rust 原生）
+- **Axum** (Rust Web 框架)
+- **Tokio** (异步运行时)
+- **Serde** (序列化)
 - **ZeroMQ** (与 C++ 通信)
 - **Mmmojo IPC** (微信原生 API，直接调用原生函数)
 
 **注意：** 不使用 PaddleOCR 和 pyautogui/pywinauto，直接通过 Mmmojo IPC 调用微信原生功能，更隐蔽、更稳定。
 
-### 原生层（C++）
+### 原生层（C++ 原生）
 - **HyperDbg VMM** (硬件虚拟化核心)
   - EPT Hook (隐形函数钩子)
   - 脚本引擎 (内核级过滤)
   - HyperEvade (反检测)
 - **libhyperdbg** (SDK 库)
 - **Zydis** (反汇编引擎)
-- **ZeroMQ** (与 Python 通信)
+- **ZeroMQ** (与 Rust 通信)
 - **Mmmojo IPC** (微信原生 API)
 
 ### AI Agent
-- **@modelcontextprotocol/sdk** (MCP SDK)
-- **mcp** (Python MCP SDK)
-- **自定义 Agent 框架**
+- **自定义 MCP 实现** (Rust 原生)
+- **ZeroMQ** (与 Rust 引擎通信)
 
 ### 数据库
-- **SQLite** (主数据库，聊天记录/联系人)
-- **LowDB** (配置存储)
-- **better-sqlite3** (Node.js SQLite 绑定)
+- **SQLite** (主数据库，C 原生，聊天记录/联系人)
+- **rusqlite** (Rust SQLite 绑定)
+
+### 通信层
+- **原生 WebSocket** (Rust tungstenite)
+- **ZeroMQ** (跨语言通信)
 
 ### 测试
-- **Vitest** (单元测试)
-- **Playwright** (E2E 测试)
-- **electron-playwright** (Electron 测试)
-- **MSW** (API Mock)
+- **Rust 测试框架** (cargo test)
+- **Tokio 测试** (异步测试)
 
 ### 部署
-- **electron-builder** (打包，Windows exe/msi)
-- **electron-updater** (自动更新)
+- **Tauri 打包** (原生安装包)
 - **GitHub Actions** (CI/CD)
 
 ---
